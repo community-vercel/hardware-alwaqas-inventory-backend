@@ -281,7 +281,9 @@ export const bulkImportProducts = async (req, res) => {
           salePrice: Math.max(0, parseFloat(row['Sale Price'] || row['salePrice'] || row['Price'] || row['price'] || 0) || 0),
           minStockLevel: Math.max(1, parseInt(row['Minimum Stock'] || row['minStockLevel'] || row['Minimum'] || row['minimumStock'] || 10) || 10),
           barcode: String(row['Barcode'] || row['barcode'] || '').trim(),
-          discount: Math.min(100, Math.max(0, parseFloat(row['Discount'] || row['discount'] || 0) || 0))
+          discount: Math.min(100, Math.max(0, parseFloat(row['Discount'] || row['discount'] || 0) || 0)),
+           isActive: true,
+           supplier: String(row['Supplier'] || row['supplier'] || '').trim()
         };
 
         // Validate required fields
