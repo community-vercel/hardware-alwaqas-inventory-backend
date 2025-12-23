@@ -14,8 +14,25 @@ const productSchema = new mongoose.Schema({
   unit: {
     type: String,
     required: true,
-    enum: ['piece', 'pack', 'box', 'kg', 'liter', 'meter']
-  },
+enum: [
+    // Count
+    'piece', 'pair', 'set', 'pack', 'box', 'bundle', 'carton',
+
+    // Weight
+    'gram', 'kg', 'ton',
+
+    // Length
+    'inch', 'feet', 'meter', 'roll', 'coil',
+
+    // Volume
+    'ml', 'liter', 'gallon', 'drum',
+
+    // Area
+    'sqft', 'sqm',
+
+    // Electrical
+    'ampere', 'watt'
+  ]  },
   salePrice: {
     type: Number,
     required: true,
