@@ -4,7 +4,10 @@ import {
   createSale, 
   getSales, 
   getSaleById, 
-  getDailySales 
+  getDailySales,
+  getCustomersFromSales, // Add this import
+  getSalesSummary,
+  refundSale
 } from '../controllers/sale.controller.js';
 import { auth } from '../middleware/auth.middleware.js';
 import { validate } from '../middleware/validate.middleware.js';
@@ -26,6 +29,10 @@ router.use(auth);
 router.post('/', validate(saleValidation), createSale);
 router.get('/', getSales);
 router.get('/daily', getDailySales);
+router.get('/summary', getSalesSummary);
+router.get('/customers', getCustomersFromSales); // Use the correct function
+
 router.get('/:id', getSaleById);
+router.delete('/:id', refundSale);
 
 export default router;

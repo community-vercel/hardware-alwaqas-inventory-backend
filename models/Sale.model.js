@@ -20,9 +20,22 @@ const saleItemSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
+  discountType: {
+    type: String,
+    enum: ['percentage', 'fixed'],
+    default: 'percentage'
+  },
   discount: {
     type: Number,
     default: 0
+  },
+  discountAmount: {
+    type: Number,
+    default: 0
+  },
+  itemTotal: {
+    type: Number,
+    required: true
   },
   total: {
     type: Number,
@@ -34,12 +47,30 @@ const saleSchema = new mongoose.Schema({
   invoiceNumber: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
+    index: true
   },
   items: [saleItemSchema],
   subtotal: {
     type: Number,
     required: true
+  },
+  itemDiscounts: {
+    type: Number,
+    default: 0
+  },
+  globalDiscount: {
+    type: Number,
+    default: 0
+  },
+  globalDiscountType: {
+    type: String,
+    enum: ['percentage', 'fixed'],
+    default: 'percentage'
+  },
+  globalDiscountAmount: {
+    type: Number,
+    default: 0
   },
   totalDiscount: {
     type: Number,
@@ -77,86 +108,54 @@ const saleSchema = new mongoose.Schema({
   },
   saleDate: {
     type: Date,
-    default: Date.now
+    default: Date.now,
+    index: true
   }
 }, {
   timestamps: true
 });
 
-// FIXED: Generate invoice number before save
-saleSchema.pre('save', async function() {
-  // Don't use next parameter in async function
-  if (!this.invoiceNumber) {
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    
-    // Create date range for today
-    const startOfDay = new Date(year, month - 1, day, 0, 0, 0, 0);
-    const endOfDay = new Date(year, month - 1, day, 23, 59, 59, 999);
-    
-    try {
-      const count = await this.constructor.countDocuments({
-        saleDate: {
-          $gte: startOfDay,
-          $lte: endOfDay
-        }
-      });
-      
-      this.invoiceNumber = `INV-${year}${month}${day}-${String(count + 1).padStart(4, '0')}`;
-    } catch (error) {
-      console.error('Error generating invoice number:', error);
-      // In async pre-save, throw error instead of calling next(error)
-      throw error;
-    }
-  }
-});
-
-// Alternative: Use synchronous pre-save hook
-// saleSchema.pre('save', function(next) {
-//   if (!this.invoiceNumber) {
-//     const date = new Date();
-//     const year = date.getFullYear();
-//     const month = String(date.getMonth() + 1).padStart(2, '0');
-//     const day = String(date.getDate()).padStart(2, '0');
-    
-//     const startOfDay = new Date(year, month - 1, day, 0, 0, 0, 0);
-//     const endOfDay = new Date(year, month - 1, day, 23, 59, 59, 999);
-    
-//     this.constructor.countDocuments({
-//       saleDate: {
-//         $gte: startOfDay,
-//         $lte: endOfDay
-//       }
-//     }).then((count) => {
-//       this.invoiceNumber = `INV-${year}${month}${day}-${String(count + 1).padStart(4, '0')}`;
-//       next();
-//     }).catch((error) => {
-//       console.error('Error generating invoice number:', error);
-//       next(error);
-//     });
-//   } else {
-//     next();
-//   }
-// });
-
-// Update product stock after sale
+// IMPORTANT: ONLY UPDATE STOCK HERE, NOT IN CONTROLLER
+// This is the single source of truth for stock updates
+// Invoice number is generated in the controller before save
 saleSchema.post('save', async function(doc) {
   try {
     const Product = mongoose.model('Product');
     
     for (const item of doc.items) {
-      await Product.findByIdAndUpdate(
+      const result = await Product.findByIdAndUpdate(
         item.product,
-        { $inc: { quantity: -item.quantity } }
+        { $inc: { quantity: -item.quantity } },
+        { new: true }
       );
+      
+      if (!result) {
+        console.error(`Product ${item.product} not found for stock update`);
+      }
     }
   } catch (error) {
     console.error('Error updating stock after sale:', error);
     // Log error but don't throw since this is post-save
   }
 });
+
+// Optional: Add a method to calculate totals from items
+saleSchema.methods.recalculateTotals = function() {
+  let subtotal = 0;
+  let itemDiscounts = 0;
+  
+  this.items.forEach(item => {
+    subtotal += item.itemTotal;
+    itemDiscounts += item.discountAmount;
+  });
+  
+  this.subtotal = subtotal;
+  this.itemDiscounts = itemDiscounts;
+  this.totalDiscount = itemDiscounts + (this.globalDiscountAmount || 0);
+  this.grandTotal = subtotal - this.totalDiscount;
+  
+  return this;
+};
 
 saleSchema.plugin(mongoosePaginate);
 
