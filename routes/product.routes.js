@@ -8,7 +8,8 @@ import {
   deleteProduct,
   getLowStockProducts,
   updateStock,
-  bulkImportProducts
+  bulkImportProducts,
+  
 } from '../controllers/product.controller.js';
 import { auth, superAdmin } from '../middleware/auth.middleware.js';
 import { validate } from '../middleware/validate.middleware.js';
@@ -46,6 +47,21 @@ const productValidation = [
   body('quantity').isNumeric().withMessage('Quantity must be a number'),
   body('category').notEmpty().withMessage('Category is required')
 ];
+// Validation rules for supplier operations
+const supplierUpdateValidation = [
+  body('newName').notEmpty().withMessage('New supplier name is required').trim()
+];
+
+const mergeSuppliersValidation = [
+  body('suppliersToMerge')
+    .isArray({ min: 1 })
+    .withMessage('Suppliers to merge must be a non-empty array'),
+  body('targetSupplier')
+    .notEmpty()
+    .withMessage('Target supplier name is required')
+    .trim()
+];
+
 
 // All routes require authentication
 router.use(auth);
