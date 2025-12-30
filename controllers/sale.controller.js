@@ -222,7 +222,8 @@ export const getSales = async (req, res) => {
       query.$or = [
         { invoiceNumber: { $regex: search, $options: 'i' } },
         { 'customer.name': { $regex: search, $options: 'i' } },
-        { 'customer.phone': { $regex: search, $options: 'i' } }
+        { 'customer.phone': { $regex: search, $options: 'i' } },
+        { 'customer.address': { $regex: search, $options: 'i' } }
       ];
     }
     
@@ -450,7 +451,8 @@ export const getCustomersFromSales = async (req, res) => {
         $match: {
           $or: [
             { 'customer.name': { $regex: search, $options: 'i' } },
-            { 'customer.phone': { $regex: search, $options: 'i' } }
+            { 'customer.phone': { $regex: search, $options: 'i' } },
+            { 'customer.address': { $regex: search, $options: 'i' } }
           ]
         }
       });
@@ -462,6 +464,7 @@ export const getCustomersFromSales = async (req, res) => {
         _id: '$customer.phone',
         name: { $first: '$customer.name' },
         phone: { $first: '$customer.phone' },
+        address: { $first: '$customer.address' },
         totalPurchases: { $sum: 1 },
         totalSpent: { $sum: '$grandTotal' },
         lastPurchaseDate: { $max: '$saleDate' },
@@ -490,6 +493,7 @@ export const getCustomersFromSales = async (req, res) => {
         _id: 1,
         name: 1,
         phone: 1,
+        address: 1,
         totalPurchases: 1,
         totalSpent: 1,
         lastPurchaseDate: 1,

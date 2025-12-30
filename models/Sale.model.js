@@ -99,7 +99,8 @@ const saleSchema = new mongoose.Schema({
   },
   customer: {
     name: String,
-    phone: String
+    phone: String,
+    address: String
   },
   soldBy: {
     type: mongoose.Schema.Types.ObjectId,
