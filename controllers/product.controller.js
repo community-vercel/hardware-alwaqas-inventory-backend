@@ -282,8 +282,13 @@ export const bulkImportProducts = async (req, res) => {
           minStockLevel: Math.max(1, parseInt(row['Minimum Stock'] || row['minStockLevel'] || row['Minimum'] || row['minimumStock'] || 10) || 10),
           barcode: String(row['Barcode'] || row['barcode'] || '').trim(),
           discount: Math.min(100, Math.max(0, parseFloat(row['Discount'] || row['discount'] || 0) || 0)),
-           isActive: true,
-           supplier: String(row['Supplier'] || row['supplier'] || '').trim()
+          isActive: true,
+          // Supplier fields
+          supplier: String(row['Supplier'] || row['supplier'] || '').trim(),
+          supplierSalesPerson: String(row['Supplier Sales Person'] || row['supplierSalesPerson'] || row['Sales Person'] || row['salesPerson'] || '').trim(),
+          supplierContact: String(row['Supplier Contact'] || row['supplierContact'] || row['Contact'] || row['contact'] || '').trim(),
+          supplierEmail: String(row['Supplier Email'] || row['supplierEmail'] || row['Email'] || row['email'] || '').trim(),
+          supplierAddress: String(row['Supplier Address'] || row['supplierAddress'] || row['Address'] || row['address'] || '').trim()
         };
 
         // Validate required fields
@@ -296,7 +301,14 @@ export const bulkImportProducts = async (req, res) => {
         }
 
         // Validate unit against allowed values
-        const allowedUnits = ['piece', 'pack', 'box', 'kg', 'liter', 'meter'];
+        const allowedUnits = [
+          'piece', 'pair', 'set', 'pack', 'box', 'bundle', 'carton',
+          'gram', 'kg', 'ton',
+          'inch', 'feet', 'meter', 'roll', 'coil',
+          'ml', 'liter', 'gallon', 'drum',
+          'sqft', 'sqm',
+          'ampere', 'watt'
+        ];
         if (!allowedUnits.includes(productData.unit)) {
           productData.unit = 'piece'; // Default to piece if invalid
         }

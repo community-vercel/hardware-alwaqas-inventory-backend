@@ -72,6 +72,18 @@ enum: [
   supplier: {
     type: String
   },
+  supplierSalesPerson:{
+type: String
+  },
+  supplierContact:{
+type: String
+  },  
+  supplierEmail:{
+type: String
+  },    
+  supplierAddress:{
+type: String
+  },
   lastUpdated: {
     type: Date,
     default: Date.now
